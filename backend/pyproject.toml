@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "file-guard"
+version = "0.1.0"
+description = "Blockchain File Integrity Monitoring System"
+authors = ["nehan wijayagunarathna"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py312']
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
