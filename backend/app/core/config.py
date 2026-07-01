@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "YOUR_SUPER_SECRET_KEY_HERE"
     CORS_ORIGINS: List[str] = ["*"]
     
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    
     DATABASE_URL: str = "mongodb://localhost:27017"
     DATABASE_NAME: str = "file_guard"
     
