@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
+    # File settings
+    MAX_UPLOAD_SIZE: int = 50 * 1024 * 1024  # 50 MB
+    ALLOWED_EXTENSIONS: List[str] = [".pdf", ".png", ".jpg", ".jpeg", ".docx", ".txt", ".csv"]
+    UPLOAD_DIR: str = "uploads"
+    
     DATABASE_URL: str = "mongodb://localhost:27017"
     DATABASE_NAME: str = "file_guard"
     
