@@ -36,6 +36,33 @@ class UserResponse(UserBase):
     is_active: bool
     role: str
     wallet_address: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = Field(None, min_length=3, max_length=50)
+    email: Optional[EmailStr] = None
+    wallet_address: Optional[str] = None
+    avatar_url: Optional[str] = None
+    
+    @field_validator("wallet_address")
+    def validate_wallet_address(cls, v: Optional[str]) -> Optional[str]:
+        if v and not re.match(r"^0x[a-fA-F0-9]{40}$", v):
+            raise ValueError("Invalid blockchain wallet address format")
+        return v
+
+
+class UserAdminUpdate(UserUpdate):
+    is_active: Optional[bool] = None
+    role: Optional[str] = None
+    is_superuser: Optional[bool] = None
+
+
+class UserListResponse(BaseModel):
+    items: list[UserResponse]
+    total: int
+    page: int
+    size: int
 
 
 class UserLogin(BaseModel):

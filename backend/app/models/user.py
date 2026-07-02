@@ -27,3 +27,4 @@ class User(BaseDBModel):
     role: Role = Field(default=Role.USER)
     permissions: List[Permission] = Field(default_factory=list)
     wallet_address: Optional[str] = None
+    avatar_url: Optional[str] = Field(default="https://ui-avatars.com/api/?name=User")

@@ -2,7 +2,9 @@ from dependency_injector import containers, providers
 from app.database.connection import DatabaseConnection
 from app.repositories.user import UserRepository
 from app.repositories.token import RefreshTokenRepository
+from app.repositories.log import ActivityLogRepository
 from app.services.auth import AuthService
+from app.services.user import UserService
 
 
 class Container(containers.DeclarativeContainer):
@@ -17,8 +19,10 @@ class Container(containers.DeclarativeContainer):
     # Repositories
     user_repo = providers.Factory(UserRepository, db=db_client)
     token_repo = providers.Factory(RefreshTokenRepository, db=db_client)
+    activity_log_repo = providers.Factory(ActivityLogRepository, db=db_client)
     
     # Services
     auth_service = providers.Factory(AuthService, user_repo=user_repo, token_repo=token_repo)
+    user_service = providers.Factory(UserService, user_repo=user_repo, activity_log_repo=activity_log_repo)
     
     # Blockchain
