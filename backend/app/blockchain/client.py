@@ -32,7 +32,7 @@ class BlockchainClient:
         self.account = Account.from_key(settings.ETH_PRIVATE_KEY)
 
         # Load contract ABI
-        abi_path = Path(__file__).parent / "contract_abi.json"
+        abi_path = Path(__file__).parent / "abi" / "FileIntegrity.json"
         with open(abi_path, "r") as f:
             contract_abi = json.load(f)
 

@@ -66,6 +66,10 @@ out/
 lib/
 broadcast/
 
+# Documentation builds (if using sphinx, mkdocs, etc)
+docs/
+site/
+
 # OS
 .DS_Store
 Thumbs.db
@@ -74,4 +78,3 @@ Thumbs.db
 *.tmp
 *.bak
 *.swp
-BLOCKCHAIN_SETUP.md

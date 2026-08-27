@@ -30,10 +30,11 @@ fi
 PRIVATE_KEY="$DEPLOY_PRIVATE_KEY"
 
 echo "Compiling contract..."
-forge build
+forge build --root ../..
 
 echo "Deploying FileIntegrity contract to Anvil..."
-DEPLOY_OUTPUT=$(forge create contracts/FileIntegrity.sol:FileIntegrity \
+DEPLOY_OUTPUT=$(forge create contracts/src/FileIntegrity.sol:FileIntegrity \
+    --root ../.. \
     --rpc-url http://127.0.0.1:8545 \
     --private-key $PRIVATE_KEY \
     2>&1)
