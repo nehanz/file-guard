@@ -3,7 +3,16 @@
 
 set -e
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Get the project root (two levels up from scripts/blockchain/)
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
 echo "Starting Anvil deployment..."
+echo "Project root: $PROJECT_ROOT"
+
+# Change to project root so all paths work correctly
+cd "$PROJECT_ROOT"
 
 # Check if Anvil is running
 if ! curl -s http://127.0.0.1:8545 > /dev/null 2>&1; then
@@ -30,11 +39,10 @@ fi
 PRIVATE_KEY="$DEPLOY_PRIVATE_KEY"
 
 echo "Compiling contract..."
-forge build --root ../..
+forge build
 
 echo "Deploying FileIntegrity contract to Anvil..."
 DEPLOY_OUTPUT=$(forge create contracts/src/FileIntegrity.sol:FileIntegrity \
-    --root ../.. \
     --rpc-url http://127.0.0.1:8545 \
     --private-key $PRIVATE_KEY \
     2>&1)
