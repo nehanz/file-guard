@@ -37,7 +37,7 @@ def create_app() -> FastAPI:
     """
     # Setup dependency injection container
     container = Container()
-    
+
     # Initialize FastAPI application
     app = FastAPI(
         title=settings.PROJECT_NAME,
@@ -47,8 +47,8 @@ def create_app() -> FastAPI:
         redoc_url=f"{settings.API_V1_STR}/redoc",
         lifespan=lifespan
     )
-    
-    # Attach container to application for wiring
+
+    # Attach container to application
     app.container = container
     
     # Add CORS Middleware
