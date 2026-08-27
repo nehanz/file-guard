@@ -10,7 +10,13 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "File Guard API"
     VERSION: str = "0.1.0"
     API_V1_STR: str = "/api/v1"
-    
+
+    # API Endpoint Configuration
+    AUTH_ENDPOINT: str = "/auth"
+    USERS_ENDPOINT: str = "/users"
+    FILES_ENDPOINT: str = "/files"
+    HEALTH_ENDPOINT: str = "/health"
+
     SECRET_KEY: str = "YOUR_SUPER_SECRET_KEY_HERE"
     CORS_ORIGINS: List[str] = ["*"]
     
@@ -24,7 +30,12 @@ class Settings(BaseSettings):
     
     DATABASE_URL: str = "mongodb://localhost:27017"
     DATABASE_NAME: str = "file_guard"
-    
+
+    # Blockchain settings
+    WEB3_PROVIDER_URI: str = "http://127.0.0.1:8545"
+    ETH_PRIVATE_KEY: str = ""  # Anvil default account private key
+    CONTRACT_ADDRESS: str = ""  # Deployed FileIntegrity contract address
+
     LOG_LEVEL: str = "DEBUG"
     
     model_config = SettingsConfigDict(

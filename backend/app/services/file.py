@@ -13,11 +13,13 @@ from app.models.log import ActivityLog
 from app.repositories.file import FileRepository
 from app.repositories.log import ActivityLogRepository
 from app.utils.file_utils import get_file_extension, ensure_upload_dir_exists
+from app.blockchain.client import BlockchainClient
 
 class FileService:
-    def __init__(self, file_repo: FileRepository, activity_log_repo: ActivityLogRepository):
+    def __init__(self, file_repo: FileRepository, activity_log_repo: ActivityLogRepository, blockchain_client: Optional[BlockchainClient] = None):
         self.file_repo = file_repo
         self.activity_log_repo = activity_log_repo
+        self.blockchain_client = blockchain_client
         ensure_upload_dir_exists(settings.UPLOAD_DIR)
 
     async def _log_activity(self, user_id: str | ObjectId, action: str, entity_id: str | ObjectId, details: dict = None):
@@ -76,8 +78,31 @@ class FileService:
             metadata={"extension": ext}
         ))
 
+        # Anchor hash on blockchain if client is available
+        tx_hash = None
+        if self.blockchain_client:
+            try:
+                tx_hash = await self.blockchain_client.store_hash_on_chain(
+                    file_id=str(file_record.id),
+                    sha256_hash=file_hash_hex
+                )
+                # Update file record with blockchain transaction hash
+                file_record.metadata["blockchain_tx"] = tx_hash
+                await self.file_repo.update(str(file_record.id), file_record)
+            except Exception as e:
+                # Log blockchain error but don't fail the upload
+                await self._log_activity(user_id, "blockchain_anchor_failed", file_record.id, {
+                    "error": str(e),
+                    "hash": file_hash_hex
+                })
+
         # Log Activity
-        await self._log_activity(user_id, "file_upload", file_record.id, {"filename": file.filename, "size": file_size, "hash": file_hash_hex})
+        await self._log_activity(user_id, "file_upload", file_record.id, {
+            "filename": file.filename,
+            "size": file_size,
+            "hash": file_hash_hex,
+            "blockchain_tx": tx_hash
+        })
 
         return file_record
 
@@ -108,3 +133,65 @@ class FileService:
             
         # Log Activity
         await self._log_activity(user_id, "file_delete", file_id, {"filename": file_record.filename, "hash": file_record.file_hash})
+
+    async def verify_file_integrity(self, user_id: str, file_id: str) -> dict:
+        """
+        Verify file integrity by comparing current hash with blockchain-anchored hash.
+
+        Returns:
+            dict with verification result and details
+        """
+        file_record = await self.get_file_by_id(user_id, file_id)
+
+        # Check if file physically exists
+        if not os.path.exists(file_record.storage_path):
+            raise NotFoundException("File not found in storage")
+
+        # Recalculate current file hash
+        sha256_hash = hashlib.sha256()
+        async with aiofiles.open(file_record.storage_path, 'rb') as f:
+            while chunk := await f.read(65536):
+                sha256_hash.update(chunk)
+
+        current_hash = sha256_hash.hexdigest()
+        stored_hash = file_record.file_hash
+
+        # Basic database hash verification
+        db_match = current_hash == stored_hash
+
+        result = {
+            "file_id": str(file_record.id),
+            "filename": file_record.filename,
+            "current_hash": current_hash,
+            "stored_hash": stored_hash,
+            "db_integrity_valid": db_match,
+            "blockchain_verified": False,
+            "blockchain_hash": None,
+            "blockchain_timestamp": None,
+            "blockchain_owner": None
+        }
+
+        # Verify against blockchain if client available
+        if self.blockchain_client:
+            try:
+                # Check if hash exists on blockchain
+                exists = await self.blockchain_client.hash_exists(str(file_record.id))
+
+                if exists:
+                    # Get blockchain record
+                    blockchain_hash, timestamp, owner = await self.blockchain_client.get_hash_from_chain(str(file_record.id))
+
+                    result["blockchain_hash"] = blockchain_hash
+                    result["blockchain_timestamp"] = timestamp
+                    result["blockchain_owner"] = owner
+                    result["blockchain_verified"] = (current_hash == blockchain_hash)
+                else:
+                    result["blockchain_verified"] = None  # Not anchored
+
+            except Exception as e:
+                result["blockchain_error"] = str(e)
+
+        # Log verification activity
+        await self._log_activity(user_id, "file_verify", file_id, result)
+
+        return result

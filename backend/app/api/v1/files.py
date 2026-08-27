@@ -59,3 +59,20 @@ async def delete_file(
 ):
     """Soft delete a file record and cleanly destroy local storage."""
     await file_service.delete_file(str(current_user.id), file_id)
+
+
+@router.post("/{file_id}/verify", status_code=status.HTTP_200_OK)
+@inject
+async def verify_file_integrity(
+    file_id: str,
+    current_user: User = Depends(get_current_user),
+    file_service: FileService = Depends(Provide[Container.file_service])
+):
+    """
+    Verify file integrity by comparing current hash with:
+    1. Database-stored hash
+    2. Blockchain-anchored hash (if available)
+
+    Returns verification result with blockchain timestamp and owner if anchored.
+    """
+    return await file_service.verify_file_integrity(str(current_user.id), file_id)
