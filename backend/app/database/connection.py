@@ -13,9 +13,11 @@ class DatabaseConnection:
         """
         Initialize database connection with a connection pool.
         """
+        import certifi
         logger.info(f"Connecting to MongoDB at {settings.DATABASE_URL}")
         cls.client = AsyncIOMotorClient(
             settings.DATABASE_URL,
+            tlsCAFile=certifi.where(),
             maxPoolSize=100,
             minPoolSize=10,
             serverSelectionTimeoutMS=5000
@@ -75,6 +77,8 @@ class DatabaseConnection:
         """
         Get database instance.
         """
+        if cls.client is None:
+            raise RuntimeError("Database connection is not initialized. Ensure MongoDB server is running and connect() was called.")
         return cls.client[settings.DATABASE_NAME]
 
 

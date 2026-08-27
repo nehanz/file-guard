@@ -28,4 +28,16 @@ class BaseDBModel(BaseModel):
         populate_by_name=True,
         arbitrary_types_allowed=True,
         json_encoders={ObjectId: str},
+        json_schema_extra={
+            "example": {
+                "id": "507f1f77bcf86cd799439011"
+            }
+        }
     )
+
+    def model_dump(self, **kwargs):
+        """Override to convert ObjectId to string in responses."""
+        data = super().model_dump(**kwargs)
+        if 'id' in data and isinstance(data['id'], ObjectId):
+            data['id'] = str(data['id'])
+        return data

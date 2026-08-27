@@ -86,9 +86,15 @@ class FileService:
                     file_id=str(file_record.id),
                     sha256_hash=file_hash_hex
                 )
-                # Update file record with blockchain transaction hash
+                # Update file record with blockchain transaction hash and anchored status
                 file_record.metadata["blockchain_tx"] = tx_hash
-                await self.file_repo.update(str(file_record.id), file_record)
+                file_record.blockchain_tx_id = tx_hash
+                file_record.status = "anchored"
+                await self.file_repo.update(str(file_record.id), {
+                    "blockchain_tx_id": tx_hash,
+                    "status": "anchored",
+                    "metadata": file_record.metadata
+                })
             except Exception as e:
                 # Log blockchain error but don't fail the upload
                 await self._log_activity(user_id, "blockchain_anchor_failed", file_record.id, {

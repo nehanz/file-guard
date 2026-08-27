@@ -45,6 +45,7 @@ echo "Deploying FileIntegrity contract to Anvil..."
 DEPLOY_OUTPUT=$(forge create contracts/src/FileIntegrity.sol:FileIntegrity \
     --rpc-url http://127.0.0.1:8545 \
     --private-key $PRIVATE_KEY \
+    --broadcast \
     2>&1)
 
 echo "$DEPLOY_OUTPUT"

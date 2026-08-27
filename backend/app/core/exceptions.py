@@ -33,7 +33,7 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
             content={"error": exc.message, "path": str(request.url)}
         )
     
-    logger.error(f"Unhandled exception at {request.url}: {str(exc)}", exc_info=exc)
+    logger.exception(f"Unhandled exception at {request.url}")
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"error": "Internal server error", "path": str(request.url)}

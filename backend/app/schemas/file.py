@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 class FileMetadata(BaseModel):
     extension: str
@@ -18,6 +18,13 @@ class FileResponse(BaseModel):
     metadata: Dict[str, Any]
     created_at: datetime
     blockchain_tx_id: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("id", "user_id", mode="before")
+    @classmethod
+    def convert_objectid_to_str(cls, v: Any) -> str:
+        return str(v) if v is not None else ""
 
 class FileListResponse(BaseModel):
     items: list[FileResponse]

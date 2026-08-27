@@ -1,6 +1,6 @@
 import re
-from typing import Optional
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from typing import Optional, Any
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator, ConfigDict
 
 
 class UserBase(BaseModel):
@@ -38,6 +38,13 @@ class UserResponse(UserBase):
     wallet_address: Optional[str] = None
     avatar_url: Optional[str] = None
 
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def convert_id_to_str(cls, v: Any) -> str:
+        return str(v) if v is not None else ""
+
 
 class UserUpdate(BaseModel):
     username: Optional[str] = Field(None, min_length=3, max_length=50)
@@ -66,8 +73,17 @@ class UserListResponse(BaseModel):
 
 
 class UserLogin(BaseModel):
-    username: str = Field(..., description="Username or Email")
+    username: Optional[str] = Field(None, description="Username or Email")
+    email: Optional[str] = Field(None, description="Email address")
     password: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_login_fields(cls, values: Any) -> Any:
+        if isinstance(values, dict):
+            if not values.get("username") and values.get("email"):
+                values["username"] = values["email"]
+        return values
 
 
 class Token(BaseModel):

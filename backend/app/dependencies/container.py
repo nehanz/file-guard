@@ -26,7 +26,13 @@ class Container(containers.DeclarativeContainer):
     """
     Dependency Injection Container.
     """
-    wiring_config = containers.WiringConfiguration(packages=["app.api", "app.services", "app.repositories", "app.dependencies"])
+    wiring_config = containers.WiringConfiguration(
+        modules=[
+            "app.api.v1.auth",
+            "app.api.v1.users",
+            "app.api.v1.files",
+        ]
+    )
 
     # Core Providers
     db_client = providers.Singleton(DatabaseConnection.get_db)
@@ -38,7 +44,7 @@ class Container(containers.DeclarativeContainer):
     file_repo = providers.Factory(FileRepository, db=db_client)
 
     # Blockchain
-    blockchain_client = providers.Singleton(get_blockchain_client_or_none)
+    blockchain_client = providers.Factory(get_blockchain_client_or_none)
 
     # Services
     auth_service = providers.Factory(AuthService, user_repo=user_repo, token_repo=token_repo)

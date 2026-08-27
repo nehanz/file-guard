@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, Request, status
+from typing import Optional
+from fastapi import APIRouter, Depends, Request, status, Body
 from fastapi.security import OAuth2PasswordRequestForm
 from dependency_injector.wiring import Provide, inject
 from app.schemas.user import UserCreate, UserResponse, Token, ChangePassword, UserLogin
@@ -6,6 +7,7 @@ from app.services.auth import AuthService
 from app.dependencies.container import Container
 from app.dependencies.auth import get_current_user
 from app.models.user import User
+from app.core.exceptions import AppException
 
 router = APIRouter()
 
@@ -22,11 +24,27 @@ async def register(
 @inject
 async def login(
     request: Request,
-    form_data: OAuth2PasswordRequestForm = Depends(),
     auth_service: AuthService = Depends(Provide[Container.auth_service])
 ):
-    """Authenticate user and return tokens (supports form login for Swagger UI)."""
-    login_data = UserLogin(username=form_data.username, password=form_data.password)
+    """Authenticate user and return tokens (supports both JSON payloads and Form Data)."""
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        try:
+            body = await request.json()
+            login_data = UserLogin(**body)
+        except Exception as e:
+            raise AppException(f"Invalid JSON payload: {str(e)}", status_code=400)
+    else:
+        try:
+            form = await request.form()
+            username = form.get("username") or form.get("email")
+            password = form.get("password")
+            if not username or not password:
+                raise AppException("Username/Email and password are required", status_code=400)
+            login_data = UserLogin(username=str(username), password=str(password))
+        except Exception as e:
+            raise AppException(f"Invalid form payload: {str(e)}", status_code=400)
+
     return await auth_service.authenticate_user(login_data, request)
 
 @router.post("/refresh", response_model=Token)
